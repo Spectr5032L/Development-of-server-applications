@@ -24,7 +24,7 @@ class AuthController extends Controller
         $user = Auth::user();
     
         // Создаем токен доступа
-        $token = $user->createToken('Access Token')->plainTextToken;
+        $token = $user->createToken('Access Token')->accessToken;
     
         // Формируем ресурс для ответа
         $resource = new AuthResourceDTO($token);
