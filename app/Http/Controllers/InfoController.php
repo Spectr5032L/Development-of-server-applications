@@ -25,7 +25,6 @@ class InfoController extends Controller
 
     public function databaseInfo()
     {
-        // Здесь добавьте логику для получения данных о базе данных
         return response()->json([
             'database' => DB::connection()->getDatabaseName()
         ]);
