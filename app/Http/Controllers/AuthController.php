@@ -10,6 +10,7 @@ use App\Http\DTO\RegisterResourceDTO;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Request;
 
 class AuthController extends Controller
 {
