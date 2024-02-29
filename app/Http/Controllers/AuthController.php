@@ -25,6 +25,7 @@ class AuthController extends Controller
     
         // Создаем токен доступа
         $token = $user->createToken('Access Token')->accessToken;
+        // $token = $request->user()->createToken('token')->plainTextToken; // Вариант который предложили на одном из форумов
     
         // Формируем ресурс для ответа
         $resource = new AuthResourceDTO($token);
@@ -52,21 +53,21 @@ class AuthController extends Controller
 
     public function me()
     {
-        // Обработка запроса получения информации об авторизованном пользователе
+
     }
 
     public function logout()
     {
-        // Обработка запроса разлогирования
+
     }
 
     public function tokens()
     {
-        // Обработка запроса получения списка авторизованных токенов пользователя
+
     }
 
     public function logoutAll()
     {
-        // Обработка запроса разлогирования всех действующих токенов
+
     }
 }
