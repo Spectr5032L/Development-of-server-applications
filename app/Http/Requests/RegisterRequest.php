@@ -15,12 +15,19 @@ class RegisterRequest extends FormRequest
     public function rules()
     {
         return [
-            'username' => ['required', 'string', 'regex:/^[A-Z][a-zA-Z]+$/','unique:users'],
+            'name' => ['required', 'string', 'regex:/^[A-Z][a-zA-Z]+$/','unique:users'],
             'email' => ['required', 'string', 'email', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]+$/'],
             'c_password' => ['required', 'string', 'same:password'],
             'birthday' => ['required', 'date', 'date_format:Y-m-d'],
         ];
+    }
+
+    public function prepareForValidation() {
+        print_r($this->name);
+        $this->merge([
+            'name' => $this->name,
+        ]);
     }
 
     public function toRegisterResource()

@@ -7,7 +7,6 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\DTO\AuthResourceDTO;
 use App\Http\DTO\RegisterResourceDTO;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Request;
@@ -17,16 +16,15 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         // Проверяем учетные данные пользователя
-        if (!Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
+        if (!auth('web')->attempt(['name' => $request->name, 'password' => $request->password])) {
             return response()->json(['message' => 'Неверные учетные данные'], 401);
         }
     
         // Получаем аутентифицированного пользователя
-        $user = Auth::user();
+        $user = auth('web')->user();
     
         // Создаем токен доступа
         $token = $user->createToken('Access Token')->accessToken;
-        // $token = $request->user()->createToken('token')->plainTextToken; // Вариант который предложили на одном из форумов
     
         // Формируем ресурс для ответа
         $resource = new AuthResourceDTO($token);
@@ -39,7 +37,7 @@ class AuthController extends Controller
     {
         // Создаем нового пользователя
         $user = User::create([
-            'username' => $request->username,
+            'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'birthday' => $request->birthday,
