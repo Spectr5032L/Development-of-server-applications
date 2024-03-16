@@ -36,11 +36,7 @@ use App\Http\Controllers\AuthController;
 Route::group(['prefix' => 'auth/'], function () {
     // нужно скачать postman чтобы работать через запросы с api
     Route::post('/login', [AuthController::class, 'login']); // не работает logreq
-    Route::post('/register', function () {
-        print_r($_POST);
-        // return $request->all();
-    }); // не работает logreq
-    // Route::post('/register', 'AuthController@register'); // не работает logreq
+    Route::post('/register', [AuthController::class, 'login']); // не работает logreq
 });
 // Route::post('api/auth/login', [AuthController::class, 'login'])->name('login')->middleware('guest');
 // C:\OSPanel\domains\Development-of-server-applications\app\Http\Controllers\AuthController.php

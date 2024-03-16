@@ -24,7 +24,6 @@ class RegisterRequest extends FormRequest
     }
 
     public function prepareForValidation() {
-        print_r($this->name);
         $this->merge([
             'name' => $this->name,
         ]);
