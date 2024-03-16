@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class InfoController extends Controller
 {
-    //
+    
     public function serverInfo()
     {
         return response()->json([
