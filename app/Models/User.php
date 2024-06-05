@@ -7,10 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Http\DTO\RoleCollectionDTO;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -22,6 +26,11 @@ class User extends Authenticatable
         'email',
         'password',
         'birthday'
+    ];
+
+    protected $dates = [
+        'created_at',
+        'deleted_at'
     ];
 
     /**
@@ -43,4 +52,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function roles()
+    {
+        return RoleCollectionDTO::fromCollectionToDTO(
+            $this->belongsToMany(Role::class, 'users_and_roles', 'user_id', 'role_id')
+                ->wherePivotNull('deleted_at')
+                ->get()
+        );
+    }
+    
 }

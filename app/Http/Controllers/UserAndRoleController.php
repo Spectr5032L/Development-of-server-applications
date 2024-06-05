@@ -30,6 +30,7 @@ class UserAndRoleController extends Controller
     {
         $userAndRole = new UsersAndRoles($request->toDTO()->toArray());
         $userAndRole->save();
+        return response() -> json($userAndRole, 201);
     }
 
     public function update(UpdateUserAndRoleRequest $request, $id)

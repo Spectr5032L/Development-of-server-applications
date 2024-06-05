@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\DTO\UserDTO;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Models\Role;
 use App\Models\User;
+use App\Models\UsersAndRoles;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -14,30 +16,35 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class MajorController extends Controller
 {
+
     public function login(LoginRequest $request)
     {
         PersonalAccessToken::where('expires_at', '<', now())->delete();
         $loginDTO = $request->toDTO();
-
+    
         if (Auth::attempt(['username' => $loginDTO->username, 'password' => $loginDTO->password]))
         {
             $user = Auth::user();
-
-            $activeTokensCount = $user->tokens()->count();
+    
+            $activeTokens = $user->tokens()->orderBy('created_at')->get();
             $maxActiveTokens = env('COUNTS_ACTIVE_TOKENS', 3);
-
-            if ($activeTokensCount < $maxActiveTokens)
+    
+            if ($activeTokens->count() >= $maxActiveTokens)
             {
-                $token = $user->createToken($loginDTO->username . '_token', ['*'], now()
-                    ->addMinutes(env('TIME_LIVE_TOKEN')))->plainTextToken;
-                return response()->json(['token' => $token], 200);
+                $tokensToDelete = $activeTokens->take($activeTokens->count() - $maxActiveTokens + 1);
+                foreach ($tokensToDelete as $token) {
+                    $token->delete();
+                }
             }
 
-            return response()->json(['error' => 'Достигнуто максимальное кол-во активных токенов'], 403);
+            $token = $user->createToken($loginDTO->username . '_token', ['*'], now()
+                ->addMinutes(env('TIME_LIVE_TOKEN', 1)))->plainTextToken;
+            return response()->json(['token' => $token], 200);
         }
-
-        return response()->json(['error' => 'Неправильный логин или пароль'], 401);
+    
+        return response()->json(['error' => ' (login) Неправильный логин или пароль'], 401);
     }
+    
 
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -51,8 +58,13 @@ class MajorController extends Controller
         ]);
 
         $user->save();
+        $userAndRole = new UsersAndRoles();
+        $userAndRole->user_id = $user->id;
+        $userAndRole->role_id = Role::where('cipher', 'GUEST')->value('id');
+        $userAndRole->created_by = $user->id;
+        $userAndRole->save();
 
-        return response()->json(['Созданный пользователь:' => $user], 201);
+        return response()->json([' (register) Созданный пользователь:' => $user], 201);
     }
 
     public function infUser(Request $request): JsonResponse
@@ -63,9 +75,8 @@ class MajorController extends Controller
 
     public function out()
     {
-        $user = Auth::user();
-        $user->currentAccessToken()->delete();
-        return response()->json(['message' => 'Вы успешно разлогинились'], 200);
+        Auth::user()->currentAccessToken()->delete();
+        return response()->json(['message' => ' (out) Вы успешно разлогинились'], 200);
     }
 
     public function tokens()
@@ -77,6 +88,6 @@ class MajorController extends Controller
     public function outAll()
     {
         Auth::user()->tokens()->delete();
-        return response()->json(['message' => 'Все токены отозваны'], 200);
+        return response()->json(['message' => ' (outAll) Все токены отозваны'], 200);
     }
 }

@@ -19,18 +19,6 @@ class UserController extends Controller
         }));
     }
 
-    public function create(CreateUserRequest $request)
-    {
-        $user = new User($request->toDTO()->toArray());
-        $user->save();
-        $userAndRole = new UsersAndRoles();
-        $userAndRole->user_id = $user->id;
-        $userAndRole->role_id = Role::where('cipher', 'GUEST')->value('id');
-        $userAndRole->created_by = Auth::id();
-        $userAndRole->save();
-        return response()->json(UserDTO::fromModelToDTO($user), 201);
-    }
-
     public function getById($id)
     {
         $user = User::find($id);
@@ -41,6 +29,18 @@ class UserController extends Controller
         }
 
         return response()->json([' (getById) Пользователь с таким id не найден'], 404);
+    }
+
+        public function create(CreateUserRequest $request)
+    {
+        $user = new User($request->toDTO()->toArray());
+        $user->save();
+        $userAndRole = new UsersAndRoles();
+        $userAndRole->user_id = $user->id;
+        $userAndRole->role_id = Role::where('cipher', 'GUEST')->value('id');
+        $userAndRole->created_by = Auth::id();
+        $userAndRole->save();
+        return response()->json(UserDTO::fromModelToDTO($user), 201);
     }
 
     public function update(UpdateUserRequest $request, $id)
