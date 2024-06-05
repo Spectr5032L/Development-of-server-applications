@@ -21,6 +21,7 @@ use App\Http\Controllers\UserController;
 */
 
 
+
 // password: the2fAt$rat
 
 Route::prefix('auth')->group(function () {
