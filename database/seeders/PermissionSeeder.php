@@ -11,7 +11,7 @@ class PermissionSeeder extends Seeder
     public function run()
     {
         $entities = ['user', 'role', 'permission'];
-        $actions = ['get-list', 'read', 'create', 'update', 'delete', 'restore'];
+        $actions = ['get-list', 'read', 'create', 'update', 'delete', 'restore', 'get-story', 'change'];
         $permissions = [];
 
         foreach ($entities as $entity)
