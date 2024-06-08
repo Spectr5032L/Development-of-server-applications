@@ -17,6 +17,12 @@ class CheckPermissions
         $userDTO = UserDTO::fromModelToDTO($user);
         $roles = collect($userDTO->roles);
 
+        $rolesCiphers = $roles->pluck('cipher');
+        if ($rolesCiphers->contains('ADMIN'))
+        {
+            return $next($request);
+        }
+
         $route = Route::getRoutes()->match($request);
         list($controller, $method) = explode('@', class_basename($route->getActionName()));
         $requiredPermission = $this->mapMethodToAction($method) . '-' . $this->mapControllerToDomain($controller);
@@ -27,12 +33,6 @@ class CheckPermissions
             $permissions = $permissions->merge(collect($role->permissions)->pluck('cipher'));
         }
         $permissions = $permissions->unique();
-
-        $rolesCiphers = $roles->pluck('cipher');
-        if ($rolesCiphers->contains('ADMIN'))
-        {
-            return $next($request);
-        }
 
         if (!$permissions->contains($requiredPermission) ||
             ($rolesCiphers->contains('USER') && $request->route('id') != $user->id
@@ -66,6 +66,8 @@ class CheckPermissions
             'hardDelete' => 'delete',
             'softDelete' => 'delete',
             'restore' => 'restore',
+            'story' => 'get-story',
+            'change' => 'change',
         ];
 
         return $map[$method] ?? null;

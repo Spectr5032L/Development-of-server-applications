@@ -50,6 +50,7 @@ Route::prefix('ref/policy/')->middleware(['auth:sanctum', 'check.permissions'])-
             Route::delete('', [RoleController::class, 'hardDelete']);
             Route::delete('soft', [RoleController::class, 'softDelete']);
             Route::post('restore', [RoleController::class, 'restore']);
+            Route::get('story', [RoleController::class, 'getStory']);
         });
     });
 
@@ -63,6 +64,7 @@ Route::prefix('ref/policy/')->middleware(['auth:sanctum', 'check.permissions'])-
             Route::delete('', [PermissionController::class, 'hardDelete']);
             Route::delete('soft', [PermissionController::class, 'softDelete']);
             Route::post('restore', [PermissionController::class, 'restore']);
+            Route::get('story', [PermissionController::class, 'getStory']);
         });
     });
 
@@ -106,6 +108,8 @@ Route::prefix('ref/')->middleware(['auth:sanctum', 'check.permissions'])->group(
             Route::delete('', [UserController::class, 'hardDelete']);
             Route::delete('soft', [UserController::class, 'softDelete']);
             Route::post('restore', [UserController::class, 'restore']);
+            Route::get('story', [UserController::class, 'getStory']);
+            Route::get('change', [UserController::class, 'change']);
         });
     });
 
