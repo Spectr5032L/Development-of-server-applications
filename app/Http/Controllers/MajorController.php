@@ -14,8 +14,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\PersonalAccessToken;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\log;
+
+use PHPMailer\PHPMailer\PHPMailer;
 
 class MajorController extends Controller
 {
@@ -32,21 +35,35 @@ class MajorController extends Controller
             {
                 $user = Auth::user();
         
-                $activeTokens = $user->tokens()->orderBy('created_at')->get();
-                $maxActiveTokens = env('COUNTS_ACTIVE_TOKENS', 3);
-        
-                if ($activeTokens->count() >= $maxActiveTokens)
+                switch (self::confirmCode($loginDTO->tfa_code))
                 {
-                    $tokensToDelete = $activeTokens->take($activeTokens->count() - $maxActiveTokens + 1);
-                    foreach ($tokensToDelete as $token) {
-                        $token->delete();
-                    }
-                }
+                    case 'Код не действителен':
+                        DB::commit();
+                        return self::getCode(); # новый код
 
-                $token = $user->createToken($loginDTO->username . '_token', ['*'], now()
-                    ->addMinutes(env('TIME_LIVE_TOKEN', 1)))->plainTextToken;
-                DB::commit();
-                return response()->json(['token' => $token], 200);
+                    case 'Код не подтверждён':
+                        return response()->json(['message' => 'Неверный код'], 422);
+
+                    case 'Код подтверждён':
+                        $user->tfa_code_count = 0;
+                        $user->save();
+
+                        $activeTokens = $user->tokens()->orderBy('created_at')->get();
+                        $maxActiveTokens = env('COUNTS_ACTIVE_TOKENS', 3);
+                
+                        if ($activeTokens->count() >= $maxActiveTokens)
+                        {
+                            $tokensToDelete = $activeTokens->take($activeTokens->count() - $maxActiveTokens + 1);
+                            foreach ($tokensToDelete as $token) {
+                                $token->delete();
+                            }
+                        }
+        
+                        $token = $user->createToken($loginDTO->username . '_token', ['*'], now()
+                            ->addMinutes(env('TIME_LIVE_TOKEN', 10)))->plainTextToken;
+                        DB::commit();
+                        return response()->json(['token' => $token], 200);
+                }
             }
 
             DB::rollback();
@@ -171,5 +188,69 @@ class MajorController extends Controller
 
             return response()->json(['error' => 'Ошибка выхода из системы'], 500);
         }
+    }
+
+    public function getCode()
+    {
+        $user = Auth::user();
+        $user->tfa_code_count += 1;
+        $user->tfa_code = null;
+        $user->tfa_code_valid_until = null;
+        $user->save();
+
+        if ($user->tfa_code_count > 3)
+        {
+            if ($user->delay_until == null)
+            {
+                $user->delay_until = Carbon::now()->addSeconds(30);
+                $user->save();
+            }
+
+            if (Carbon::now()->lt($user->delay_until))
+            {
+                return response()->json(['message' => 'Подождите']);
+            }
+        }
+
+        $user->tfa_code = mt_rand(100000, 999999);
+        $user->tfa_code_valid_until = Carbon::now()->addSeconds(env('TWO_FACTOR_CODE_EXPIRATION', 60));
+        $user->save();
+
+        $mail = new PHPMailer(true);
+
+        $mail->isSMTP();
+        $mail->Host = env('MAIL_HOST');
+        $mail->SMTPAuth = true;
+        $mail->Username = env('MAIL_USERNAME');
+        $mail->Password = env('MAIL_PASSWORD');
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = env('MAIL_PORT');
+        $mail->setFrom(env('MAIL_USERNAME'));
+        $mail->addAddress("mihail.plotnikov.08@mail.ru"); // Всегда на этот ($user->email)
+        $mail->isHTML(false);
+        $mail->Subject = 'tfa code';
+        $mail->Body = $user->tfa_code;
+
+        // $mail->SMTPDebug = 2;
+        // $mail->Debugoutput = 'html';
+
+        $mail->send();
+
+        return response()->json(['tfa_code' => $user->tfa_code]);
+    }
+
+    private function confirmCode($tfa_code)
+    {
+        $user = Auth::user();
+
+        if ($user->tfa_code && Carbon::now()->lt($user->tfa_code_valid_until))
+        {
+            if ($tfa_code == $user->tfa_code)
+            {
+                return 'Код подтверждён';
+            }
+            return 'Код не подтверждён';
+        }
+        return 'Код не действителен';
     }
 }

@@ -7,6 +7,7 @@ use App\Models\ChangeLogs;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ChangeLogsController extends Controller
 {
@@ -90,25 +91,38 @@ class ChangeLogsController extends Controller
             $record = $modelClass::find($record_id);
 
             $oldData = json_decode($log->old_record, true);
+            $oldDataForLogs = $record->toArray();
 
             if ($record)
             {
                 if ($oldData == null)
                 {
                     $record->forceDelete();
+                    $newDataLogs = null;
+                    DB::commit();
                 }
                 else
                 {
                     $record->update($oldData);
+                    $newDataLogs = $record->toArray();
+                    DB::commit();
                 }
+
+                
+                $changeLogsDTO = new ChangeLogsDTO(
+                    $entity,
+                    $record->id,
+                    json_encode($oldDataForLogs),
+                    json_encode($newDataLogs),
+                    auth()->id()
+                );
+                ChangeLogsController::create($changeLogsDTO);
             }
             else
             {
                 return ['error' => 'Запись в таблице ' . $entity . ' с таким id не найдена'];
             }
 
-
-            DB::commit();
 
             return ['Обновлённая запись' => $record];
         } catch (Exception $e) {

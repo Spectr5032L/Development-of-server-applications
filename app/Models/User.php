@@ -27,12 +27,17 @@ class User extends Authenticatable
         'password',
         'birthday', 
         'deleted_at',
-        'deleted_by'
+        'deleted_by',
+        'tfa_code',
+        'tfa_code_valid_until',
+        'tfa_code_count',
+        'delay_until',
     ];
 
     protected $dates = [
         'created_at',
-        'deleted_at'
+        'deleted_at',
+        'tfa_code_valid_until',
     ];
 
     /**

@@ -17,6 +17,7 @@ class LoginRequest extends FormRequest
         return [
             'username' => 'required|string|regex:/[A-Z][a-zA-Z]{6,}$/',
             'password' => 'required|string|min:8|regex:/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()-_=+]).{8,}$/',
+            'tfa_code' => 'required|digits:6',
         ];
     }
 
@@ -24,7 +25,8 @@ class LoginRequest extends FormRequest
     {
         return new LoginDTO(
             $this->input('username'),
-            $this->input('password')
+            $this->input('password'),
+            $this->input('tfa_code')
         );
 
     }

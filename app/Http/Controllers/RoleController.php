@@ -44,7 +44,8 @@ class RoleController extends Controller
             $newData = $role->toArray();
 
             $changeLogsDTO = new ChangeLogsDTO(
-                'Roles',
+                // 'Roles',
+                $role ->getTable(),
                 $role->id,
                 json_encode(null),
                 json_encode($newData),

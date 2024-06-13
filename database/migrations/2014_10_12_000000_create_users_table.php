@@ -21,6 +21,10 @@ return new class extends Migration
             $table->timestamps();
             $table->timestamp('deleted_at')->nullable();
             $table->Integer('deleted_by')->nullable();
+            $table->Integer('tfa_code')->nullable();
+            $table->timestamp('tfa_code_valid_until')->nullable();
+            $table->Integer('tfa_code_count')->default(0);
+            $table->timestamp('delay_until')->nullable();
         });
     }
 
